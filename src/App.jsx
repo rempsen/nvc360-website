@@ -17,7 +17,7 @@ builder.init('071c3ce42e3d468886e152588b998264')
 
 function App() {
   const [builderContentJson, setBuilderContentJson] = useState(null)
-  const isCalculatorArticle = window.location.pathname === '/field-service-wasted-hours-calculator'
+  const isCalculatorArticle = window.location.pathname.endsWith('/field-service-wasted-hours-calculator')
 
   useEffect(() => {
     // If the user navigates directly to a Builder-published URL path, fetch that content

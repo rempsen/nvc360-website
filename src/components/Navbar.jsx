@@ -4,7 +4,7 @@ import { twMerge } from 'tailwind-merge';
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
-    const homePath = window.location.pathname === '/' ? '' : '/';
+    const homePath = window.location.pathname === import.meta.env.BASE_URL ? '' : import.meta.env.BASE_URL;
 
     useEffect(() => {
         const handleScroll = () => {

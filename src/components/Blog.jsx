@@ -1,11 +1,13 @@
 import { ArrowRight } from 'lucide-react';
 
+const calculatorPath = `${import.meta.env.BASE_URL}field-service-wasted-hours-calculator`;
+
 const articles = [
     {
         title: "Field-Service Wasted Hours Calculator: See Your Annual Opportunity",
         category: "Cost Savings",
         date: "Sep 2026",
-        link: "/field-service-wasted-hours-calculator"
+        link: calculatorPath
     },
     {
         title: "Unlock the Future with NVC360 New: Pioneering Software Solutions for Canadian Enterprises",

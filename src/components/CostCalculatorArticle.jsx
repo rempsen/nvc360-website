@@ -27,30 +27,45 @@ function formatNumber(value) {
   return new Intl.NumberFormat('en-CA', { maximumFractionDigits: 0 }).format(Math.round(value));
 }
 
+function formatCurrency(value, currency) {
+  return new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(Math.round(value));
+}
+
 export default function CostCalculatorArticle() {
   const [technicians, setTechnicians] = useState(10);
   const [industry, setIndustry] = useState('HVAC & Mechanical');
+  const [hourlyWage, setHourlyWage] = useState(35);
+  const [currency, setCurrency] = useState('CAD');
   const [hoursPerWeek, setHoursPerWeek] = useState(DEFAULT_HOURS_PER_WEEK);
   const [workWeeks, setWorkWeeks] = useState(DEFAULT_WORK_WEEKS);
   const [showAssumptions, setShowAssumptions] = useState(false);
+  const homeUrl = import.meta.env.BASE_URL;
 
   const estimate = useMemo(() => {
     const safeTechnicians = Math.max(1, Number(technicians) || 1);
     const safeHours = Math.max(1, Number(hoursPerWeek) || DEFAULT_HOURS_PER_WEEK);
     const safeWeeks = Math.max(1, Number(workWeeks) || DEFAULT_WORK_WEEKS);
+    const safeHourlyWage = Math.max(0, Number(hourlyWage) || 0);
     const annualHours = safeTechnicians * safeHours * safeWeeks * ADMINISTRATION_RATE;
     const weeklyHours = safeTechnicians * safeHours * ADMINISTRATION_RATE;
     const workdays = annualHours / 8;
+    const annualWageCost = annualHours * safeHourlyWage;
 
     return {
       technicians: safeTechnicians,
       hoursPerWeek: safeHours,
       workWeeks: safeWeeks,
+      hourlyWage: safeHourlyWage,
       annualHours,
       weeklyHours,
       workdays,
+      annualWageCost,
     };
-  }, [technicians, hoursPerWeek, workWeeks]);
+  }, [technicians, hoursPerWeek, workWeeks, hourlyWage]);
 
   const handleNumberChange = (setter, maximum) => (event) => {
     const nextValue = event.target.value;
@@ -65,7 +80,7 @@ export default function CostCalculatorArticle() {
     <main className="bg-moss-900 pt-28 pb-24">
       <article className="mx-auto w-full max-w-7xl px-6">
         <a
-          href="/#blog"
+          href={`${homeUrl}#blog`}
           className="mb-10 inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-chartreuse transition-colors hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" /> Back to insights
@@ -78,7 +93,7 @@ export default function CostCalculatorArticle() {
               How many field hours could your team reclaim each year?
             </h1>
             <p className="mt-7 max-w-3xl text-lg leading-relaxed text-white/65 md:text-xl">
-              Use this field-service wasted-hours calculator to estimate the annual technician time consumed by administrative work—and identify the operational friction worth fixing first.
+              Use this field-service wasted-hours calculator to estimate annual technician time and payroll cost tied to administrative work—and identify the operational friction worth fixing first.
             </p>
           </div>
 
@@ -121,6 +136,39 @@ export default function CostCalculatorArticle() {
               aria-describedby="technicians-help"
             />
             <p id="technicians-help" className="mt-2 text-sm text-white/45">Include technicians, drivers, or mobile crew members who complete field work.</p>
+
+            <div className="mt-7 grid grid-cols-[1fr_7rem] gap-3">
+              <div>
+                <label htmlFor="hourly-wage" className="mb-2 block text-sm font-bold text-white">
+                  Average hourly wage
+                </label>
+                <input
+                  id="hourly-wage"
+                  type="number"
+                  min="0"
+                  max="1000"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={hourlyWage}
+                  onChange={handleNumberChange(setHourlyWage, 1000)}
+                  className="w-full rounded-2xl border border-white/15 bg-moss-900 px-5 py-4 text-2xl font-bold text-white outline-none transition focus:border-chartreuse focus:ring-2 focus:ring-chartreuse/20"
+                  aria-describedby="wage-help"
+                />
+              </div>
+              <div>
+                <label htmlFor="currency" className="mb-2 block text-sm font-bold text-white">Currency</label>
+                <select
+                  id="currency"
+                  value={currency}
+                  onChange={(event) => setCurrency(event.target.value)}
+                  className="w-full appearance-none rounded-2xl border border-white/15 bg-moss-900 px-4 py-4 text-base font-semibold text-white outline-none transition focus:border-chartreuse focus:ring-2 focus:ring-chartreuse/20"
+                >
+                  <option value="CAD">CAD</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+            <p id="wage-help" className="mt-2 text-sm text-white/45">Use gross hourly pay only. Benefits, payroll burden, overhead, and profit are excluded.</p>
 
             <label htmlFor="industry" className="mb-2 mt-7 block text-sm font-bold text-white">
               Industry
@@ -188,10 +236,21 @@ export default function CostCalculatorArticle() {
                 For a {formatNumber(estimate.technicians)}-person {industry.toLowerCase()} field team, that is approximately {formatNumber(estimate.weeklyHours)} hours of administrative work every week, or {formatNumber(estimate.workdays)} eight-hour workdays each year.
               </p>
 
+              <div className="mt-7 rounded-2xl border border-moss-900/15 bg-moss-900 p-5 text-white">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-chartreuse">Estimated annual wage cost tied to those hours</p>
+                <p className="mt-2 text-4xl font-black tracking-tight md:text-5xl">{formatCurrency(estimate.annualWageCost, currency)}</p>
+                <p className="mt-2 text-sm leading-relaxed text-white/60">
+                  At {formatCurrency(estimate.hourlyWage, currency)} per hour. This is a payroll-cost proxy, not a forecast of savings or profitability.
+                </p>
+              </div>
+
               <div className="mt-8 rounded-2xl border border-moss-900/15 bg-white/25 p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-moss-900/60">The calculation</p>
                 <p className="mt-2 font-mono text-sm font-bold leading-relaxed md:text-base">
                   {formatNumber(estimate.technicians)} technicians × {estimate.hoursPerWeek} hours/week × {estimate.workWeeks} weeks/year × 18% = {formatNumber(estimate.annualHours)} hours/year
+                </p>
+                <p className="mt-2 font-mono text-sm font-bold leading-relaxed md:text-base">
+                  {formatNumber(estimate.annualHours)} hours/year × {formatCurrency(estimate.hourlyWage, currency)}/hour = {formatCurrency(estimate.annualWageCost, currency)}/year
                 </p>
               </div>
 
@@ -212,7 +271,7 @@ export default function CostCalculatorArticle() {
               <div>
                 <h2 className="text-lg font-bold text-white">About this estimate</h2>
                 <p className="mt-3 text-sm leading-relaxed text-white/60">
-                  The calculator applies Salesforce’s 18% field-service benchmark to the work schedule you enter. Industry selection tailors the operational recommendation; it does not change the percentage because the cited research does not provide industry-specific administrative-time rates.
+                  The calculator applies Salesforce’s 18% field-service benchmark to the work schedule you enter. The wage estimate multiplies those hours by the gross hourly wage you provide. It excludes benefits, payroll taxes, overhead, billable recovery, and profit. Industry selection tailors the operational recommendation; it does not change the percentage because the cited research does not provide industry-specific administrative-time rates.
                 </p>
               </div>
             </div>
@@ -239,7 +298,7 @@ export default function CostCalculatorArticle() {
         <section className="mt-14 border-t border-white/10 pt-8">
           <h2 className="text-xl font-bold text-white">Source and methodology</h2>
           <p className="mt-3 max-w-4xl text-sm leading-relaxed text-white/55">
-            Salesforce surveyed 6,500 service professionals across 40 countries and 350 U.S. mobile workers for its January 2026 field-service research. It reported that technicians waste 18% of working hours—more than seven hours per week—on administration such as forms and information searching. This calculator estimates annual hours only; it does not calculate dollar savings or guarantee results.
+            Salesforce surveyed 6,500 service professionals across 40 countries and 350 U.S. mobile workers for its January 2026 field-service research. It reported that technicians waste 18% of working hours—more than seven hours per week—on administration such as forms and information searching. This calculator estimates annual hours and the wage cost associated with those hours using reader-entered inputs; it does not calculate savings, total employment cost, or guarantee results.
           </p>
           <p className="mt-3 text-sm">
             <a
