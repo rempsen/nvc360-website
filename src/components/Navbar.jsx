@@ -4,6 +4,7 @@ import { twMerge } from 'tailwind-merge';
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
+    const homePath = window.location.pathname === '/' ? '' : '/';
 
     useEffect(() => {
         const handleScroll = () => {
@@ -46,13 +47,13 @@ export default function Navbar() {
                 </div>
                 <div className="hidden md:flex gap-6 lg:gap-8 font-medium text-xs lg:text-sm">
                     {['Features', 'Philosophy', 'Protocol', 'Impact', 'Blog', 'Contact'].map((item) => (
-                        <a key={item} href={`#${item.toLowerCase()}`} className="hover:opacity-60 transition-opacity whitespace-nowrap">
+                        <a key={item} href={`${homePath}#${item.toLowerCase()}`} className="hover:opacity-60 transition-opacity whitespace-nowrap">
                             {item}
                         </a>
                     ))}
                 </div>
                 <a
-                    href="#contact"
+                    href={`${homePath}#contact`}
                     className={twMerge(
                         clsx(
                             'px-5 py-2.5 rounded-full font-bold text-sm transition-colors cursor-pointer',

@@ -8,4 +8,7 @@ export default defineConfig({
     tailwindcss(),
     react()
   ],
+  server: {
+    allowedHosts: ['5173-ieqooy5wr1xskq5qfrb8w-026b20f7.us1.manus.computer'],
+  },
 })
